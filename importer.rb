@@ -16,27 +16,41 @@ module WeeblyToWordpress
 			download_file(sitemappath, 'sitemap.xml')
 			file = open ('sitemap.xml')
 			sitemap = XmlSimple.xml_in(file)
-			pages = sitemap["url"].map{|loc| {location: loc["loc"].first, modified: loc["lastmod"].first}}
+			pages = sitemap["url"].map{|loc| {location: loc["loc"].first, 
+											  modified: loc["lastmod"].first}}
 		end
 
 		def import(site)
 			sitemap = get_sitemap(site)
-			pbar = ProgressBar.create(title: "Downloading", total: sitemap.count)
+			pbar = ProgressBar.create(title: "Downloading", 
+									  total: sitemap.count)
 
 			pages = sitemap.map do |page|
-				import_page(page)
+				p = import_page(page, true)
 				pbar.increment
+				p
 			end
 		end
 
-		def import_page(page)
-			page_html = get_page(page, false)
-			save_images(page_html)
-			{location: page[:location], modified: page[:modified]}
+		def import_page(page, cached = false)
+			page_html, filename = get_html(page, cached)
+			save_images(page_html) unless cached
+			meta = get_meta(page_html)
+			meta.merge({location: filename, modified: page[:modified], 
+						content: page_html})
+		end
+
+		def get_meta(html)
+			doc = Nokogiri::HTML(html)
+			metas = doc.css("meta").map{|m| m.attributes}
+			   		   .map{|a| [a["property"] ? a["property"].value : nil ,
+			    				 a["content"] ? a["content"].value : nil]}
+			meta = Hash[*metas.flatten]
 		end
 
 		def download_file(from, to)
 			begin
+				# create directory if required
 				FileUtils.mkdir_p(File.dirname(to))
 				File.open(to, "wb") do |saved_file|
 					open(from) do |read_file|
@@ -49,21 +63,20 @@ module WeeblyToWordpress
 			end
 		end
 
-		def get_page(page, cached = false)
-			filename = page[:location].gsub(SITE, "")
+		def get_html(page, cached = false)
+			filename = page[:location].gsub(@site, "")
 			filename = File.join(CACHEDIR, filename)
 			if cached 
-				return open(filename)
+				page_html = open(filename)
 			else
-				return download_and_cache(page, filename)
+				page_html = download_and_cache(page, filename)
 			end
+			return page_html, filename
 		end
 
 		def download_and_cache(page, filename)
 			file = open(page[:location])
 			page_html = file.read
-			# create directory if required
-			
 			File.open(filename, 'w') {|f| f.write(page_html) }
 			save_images(page_html)
 			return page_html
