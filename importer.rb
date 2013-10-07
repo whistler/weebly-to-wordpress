@@ -67,7 +67,7 @@ module WeeblyToWordpress
 			filename = page[:location].gsub(@site, "")
 			filename = File.join(CACHEDIR, filename)
 			if cached 
-				page_html = open(filename)
+				page_html = open(filename).read()
 			else
 				page_html = download_and_cache(page, filename)
 			end
@@ -86,7 +86,7 @@ module WeeblyToWordpress
 			doc = Nokogiri::HTML(content)
 			doc.css('img').each do |img|
 				img_url = img.attributes["src"].value
-				save_url = img_url.gsub(SITE, "").gsub("http://","")
+				save_url = img_url.gsub(@site, "").gsub("http://","")
 				img_url = insert_domain_if_missing(img_url)
 				download_file(img_url, File.join(CACHEDIR, save_url))
 			end

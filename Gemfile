@@ -1,0 +1,7 @@
+gem 'sequel'
+gem 'ruby-progressbar'
+gem 'nokogiri'
+gem 'xml-simple'
+gem 'pry'
+gem 'rubypress'
+gem 'mime-types'
