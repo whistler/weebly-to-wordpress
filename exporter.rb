@@ -3,7 +3,6 @@ require 'ruby-progressbar'
 require 'uri'
 require 'sequel'
 require 'pry'
-require 'mime/types'
 require 'nokogiri'
 require 'xmlrpc/client'
 
@@ -48,8 +47,6 @@ module WeeblyToWordpress
 				#remove params
 				matches = /(.*)\?/.match(name)
 				name = matches[1] unless matches.nil?
-				
-				mime = MIME::Types.type_for(name).first.content_type
 				bits = XMLRPC::Base64.new(File.open(image).read())
 				data = {:name => name, :bits => bits, 
 						:overwrite => false}
