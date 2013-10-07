@@ -45,12 +45,16 @@ module WeeblyToWordpress
 				name = File.basename(image)
 
 				#remove params
-				matches = /(.*)\?/.match(name)
+				matches = /(.*?)\?/.match(name)
 				name = matches[1] unless matches.nil?
 				bits = XMLRPC::Base64.new(File.open(image).read())
 				data = {:name => name, :bits => bits, 
 						:overwrite => false}
-				response = @blog.uploadFile(data: data)
+				begin
+					response = @blog.uploadFile(data: data)
+				rescue Exception => e
+					binding.pry
+				end
 				url = response["url"]
 				@images[image] = url
 			end
