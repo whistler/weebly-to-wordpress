@@ -6,13 +6,13 @@ require_relative 'exporter'
 CACHEDIR = "site/"
 file = open('sitemap.xml')
 
-if ARGV.count != 2
-	print 'usage: ./weeblytowordpress.rb <oldsite> <newsite> <username> <password>'
+if ARGV.count != 4
+	print 'usage: ./weeblytowordpress.rb <weebly_site> <wp_site> <wp_username> <wp_password> [fetch=true]'
 end
 
-oldsite, newsite, username, password = ARGV
-
+weebly_site, wp_site, username, password, fetch = ARGV
+fetch = true if fetch.nil?
 importer = WeeblyToWordpress::Importer.new
-posts = importer.import(oldsite)
+posts = importer.import(weebly_site, fetch)
 exporter = WeeblyToWordpress::Exporter.new
-exporter.export(posts, oldsite, newsite, username, password)
+exporter.export(posts, weebly_site, wp_site, username, password)

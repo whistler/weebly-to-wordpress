@@ -20,21 +20,21 @@ module WeeblyToWordpress
 											  modified: loc["lastmod"].first}}
 		end
 
-		def import(site)
+		def import(site, fetch = false)
 			sitemap = get_sitemap(site)
 			pbar = ProgressBar.create(title: "Downloading", 
 									  total: sitemap.count)
 
 			pages = sitemap.map do |page|
-				p = import_page(page, true)
+				p = import_page(page, fetch)
 				pbar.increment
 				p
 			end
 		end
 
-		def import_page(page, cached = false)
-			page_html, filename = get_html(page, cached)
-			save_images(page_html) unless cached
+		def import_page(page, fetch = false)
+			page_html, filename = get_html(page, fetch)
+			save_images(page_html) unless fetch
 			meta = get_meta(page_html)
 			meta.merge({location: filename, modified: page[:modified], 
 						content: page_html})
@@ -63,10 +63,10 @@ module WeeblyToWordpress
 			end
 		end
 
-		def get_html(page, cached = false)
+		def get_html(page, fetch = false)
 			filename = page[:location].gsub(@site, "")
 			filename = File.join(CACHEDIR, filename)
-			if cached 
+			if fetch 
 				page_html = open(filename).read()
 			else
 				page_html = download_and_cache(page, filename)
